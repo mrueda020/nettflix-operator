@@ -14,9 +14,10 @@ spec:
     spec:
       containers:
       - name: netflix-container
-        image: hello-world
+        image: mrueda020/netflix-react-clone:latest
         resources:
           limits:
             memory: "128Mi"
             cpu: "500m"
+          
         

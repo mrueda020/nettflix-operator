@@ -13,9 +13,10 @@ var (
 	//go:embed manifests/*
 	manifests embed.FS
 
-	appsScheme  = runtime.NewScheme()
-	appsCodecs  = serializer.NewCodecFactory(appsScheme)
-	corev1Codec = serializer.NewCodecFactory(runtime.NewScheme()).UniversalDecoder(corev1.SchemeGroupVersion)
+	appsScheme   = runtime.NewScheme()
+	appsCodecs   = serializer.NewCodecFactory(appsScheme)
+	coresScheme  = runtime.NewScheme()
+	corev1Codecs = serializer.NewCodecFactory(coresScheme)
 )
 
 func init() {
@@ -23,35 +24,35 @@ func init() {
 		panic(err)
 	}
 
-	if err := corev1.AddToScheme(appsScheme); err != nil {
+	if err := corev1.AddToScheme(coresScheme); err != nil {
 		panic(err)
 	}
 }
 
-func GetDeploymentFromFile(name string) (*appsv1.Deployment, error) {
+func GetDeploymentFromFile(name string) *appsv1.Deployment {
 	deploymentBytes, err := manifests.ReadFile(name)
 	if err != nil {
-		return nil, err
+		panic(err)
 	}
 
-	deploymentObject := &appsv1.Deployment{}
-	if _, _, err := appsCodecs.UniversalDeserializer().Decode(deploymentBytes, nil, deploymentObject); err != nil {
-		return nil, err
+	deploymentObject, err := runtime.Decode(appsCodecs.UniversalDecoder(appsv1.SchemeGroupVersion), deploymentBytes)
+	if err != nil {
+		panic(err)
 	}
 
-	return deploymentObject, nil
+	return deploymentObject.(*appsv1.Deployment)
 }
 
-func GetServiceFromFile(name string) (*corev1.Service, error) {
-	serviceBytes, err := manifests.ReadFile(name)
+func GetServiceFromFile(name string) *corev1.Service {
+	servicesBytes, err := manifests.ReadFile(name)
 	if err != nil {
-		return nil, err
+		panic(err)
 	}
 
-	serviceObject := &corev1.Service{}
-	if _, _, err := corev1Codec.Decode(serviceBytes, nil, serviceObject); err != nil {
-		return nil, err
+	serviceObject, err := runtime.Decode(corev1Codecs.UniversalDecoder(corev1.SchemeGroupVersion), servicesBytes)
+	if err != nil {
+		panic(err)
 	}
 
-	return serviceObject, nil
+	return serviceObject.(*corev1.Service)
 }

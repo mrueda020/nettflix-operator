@@ -28,9 +28,9 @@ type NetflixSpec struct {
 	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
 
-	// Foo is an example field of Netflix. Edit netflix_types.go to remove/update
+	//Replicas is the number of pods running
 	Replicas *int32 `json:"replicas,omitempty"`
-	Port     *int32 `json:"port,omitempty"`
+	//Port     *int32 `json:"port,omitempty"`
 }
 
 // NetflixStatus defines the observed state of Netflix

@@ -10,3 +10,4 @@ metadata:
   name: netflix-sample
 spec:
   # TODO(user): Add fields here
+  replicas: 1

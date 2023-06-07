@@ -25,7 +25,6 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/utils/pointer"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/log"
@@ -37,10 +36,11 @@ type NetflixReconciler struct {
 	Scheme *runtime.Scheme
 }
 
-//+kubebuilder:rbac:groups=web.example.com,resources=netflixes,verbs=get;list;watch;create;update;patch;delete
-//+kubebuilder:rbac:groups=web.example.com,resources=netflixes/status,verbs=get;update;patch
-//+kubebuilder:rbac:groups=web.example.com,resources=netflixes/finalizers,verbs=update
-
+// +kubebuilder:rbac:groups=web.example.com,resources=netflixes,verbs=get;list;watch;create;update;patch;delete
+// +kubebuilder:rbac:groups=web.example.com,resources=netflixes/status,verbs=get;update;patch
+// +kubebuilder:rbac:groups=web.example.com,resources=netflixes/finalizers,verbs=update
+// +kubebuilder:rbac:groups=apps,resources=deployments,verbs=get;list;watch;create;update;patch;delete
+// +kubebuilder:rbac:groups=core,resources=services,verbs=get;list;watch;create;update;patch;delete
 // Reconcile is part of the main kubernetes reconciliation loop which aims to
 // move the current state of the cluster closer to the desired state.
 // TODO(user): Modify the Reconcile function to compare the state specified by
@@ -64,46 +64,69 @@ func (r *NetflixReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 		return ctrl.Result{}, err
 	}
 
+	// Retrieve or create the Nginx deployment
 	deployment := &appsv1.Deployment{}
+	create := false
 	err = r.Get(ctx, req.NamespacedName, deployment)
-
 	if err != nil {
 		if errors.IsNotFound(err) {
-			logger.Info("No deployments for netflix, creating deployment")
-			deployment.Namespace = req.Namespace
-			deployment.Name = req.Name
-
-			deploymentManifest, _ := assets.GetDeploymentFromFile("manifests/netflix_deployment.yaml")
-			deploymentManifest.Spec.Replicas = pointer.Int32(3)
-
-			err = r.Create(ctx, deploymentManifest)
-			if err != nil {
-				logger.Error(err, "Error creating netflix deployment.")
-				return ctrl.Result{}, err
-			}
+			// Create the deployment from file if not found
+			create = true
+			deployment = assets.GetDeploymentFromFile("manifests/netflix_deployment.yaml")
+		} else {
+			// Error getting existing Nginx deployment
+			logger.Error(err, "Error getting existing netflix deployment")
+			return ctrl.Result{}, err
 		}
-		logger.Error(err, "Error getting netflix deployment.")
+	}
+
+	// Set deployment fields
+	deployment.Namespace = req.Namespace
+	deployment.Name = req.Name
+	deployment.Spec.Replicas = netflixOperatorCR.Spec.Replicas
+
+	ctrl.SetControllerReference(netflixOperatorCR, deployment, r.Scheme)
+
+	// Create or update the deployment
+	if create {
+		err = r.Create(ctx, deployment)
+	} else {
+		err = r.Update(ctx, deployment)
+	}
+	if err != nil {
+		logger.Error(err, "Error Create or update the deployment ")
 		return ctrl.Result{}, err
 	}
 
-	service := corev1.Service{}
-	err = r.Get(ctx, req.NamespacedName, &service)
+	// Retrieve or create the Nginx deployment
+	service := &corev1.Service{}
+	create = false
+	err = r.Get(ctx, req.NamespacedName, service)
 	if err != nil {
 		if errors.IsNotFound(err) {
-			logger.Info("No deployments for netflix, creating deployment")
-			service.Namespace = req.Namespace
-			service.Name = req.Name
-
-			serviceManifest, _ := assets.GetDeploymentFromFile("manifests/netflix_deployment.yaml")
-			serviceManifest.Spec.Template.Spec.Containers[0].Ports[0].ContainerPort = *netflixOperatorCR.Spec.Port
-
-			err = r.Create(ctx, serviceManifest)
-			if err != nil {
-				logger.Error(err, "Error creating netflix service.")
-				return ctrl.Result{}, err
-			}
+			// Create the service from file if not found
+			create = true
+			service = assets.GetServiceFromFile("manifests/netflix_service.yaml")
+		} else {
+			// Error getting existing Nginx deployment
+			logger.Error(err, "Error getting existing netflix service")
+			return ctrl.Result{}, err
 		}
-		logger.Error(err, "Error getting netflix service.")
+	}
+
+	// Set service fields
+	service.Namespace = req.Namespace
+	service.Name = req.Name
+	ctrl.SetControllerReference(netflixOperatorCR, service, r.Scheme)
+
+	// Create or update the service
+	if create {
+		err = r.Create(ctx, service)
+	} else {
+		err = r.Update(ctx, service)
+	}
+	if err != nil {
+		logger.Error(err, "Error Create or update the service ")
 		return ctrl.Result{}, err
 	}
 
@@ -114,5 +137,7 @@ func (r *NetflixReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 func (r *NetflixReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&webv1alpha1.Netflix{}).
+		Owns(&appsv1.Deployment{}).
+		Owns(&corev1.Service{}).
 		Complete(r)
 }

@@ -29,7 +29,8 @@ type NetflixSpec struct {
 	// Important: Run "make" to regenerate code after modifying this file
 
 	// Foo is an example field of Netflix. Edit netflix_types.go to remove/update
-	Foo string `json:"foo,omitempty"`
+	Replicas *int32 `json:"replicas,omitempty"`
+	Port     *int32 `json:"port,omitempty"`
 }
 
 // NetflixStatus defines the observed state of Netflix

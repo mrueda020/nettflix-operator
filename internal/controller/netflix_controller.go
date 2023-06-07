@@ -95,7 +95,7 @@ func (r *NetflixReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 			service.Name = req.Name
 
 			serviceManifest, _ := assets.GetDeploymentFromFile("manifests/netflix_deployment.yaml")
-			//serviceManifest.Spec.Template.Spec.Containers[0].Ports[0].ContainerPort = *netflixOperatorCR.Spec.Port
+			serviceManifest.Spec.Template.Spec.Containers[0].Ports[0].ContainerPort = *netflixOperatorCR.Spec.Port
 
 			err = r.Create(ctx, serviceManifest)
 			if err != nil {

@@ -5,4 +5,8 @@ metadata:
 spec:
   selector:
     app: netflix
-  
+  ports:
+  - port: 80
+    targetPort: 80
+    protocol: 'TCP'
+  type: LoadBalancer  

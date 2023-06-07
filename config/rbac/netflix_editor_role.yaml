@@ -1,0 +1,31 @@
+# permissions for end users to edit netflixes.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  labels:
+    app.kubernetes.io/name: clusterrole
+    app.kubernetes.io/instance: netflix-editor-role
+    app.kubernetes.io/component: rbac
+    app.kubernetes.io/created-by: nettflix-operator
+    app.kubernetes.io/part-of: nettflix-operator
+    app.kubernetes.io/managed-by: kustomize
+  name: netflix-editor-role
+rules:
+- apiGroups:
+  - web.example.com
+  resources:
+  - netflixes
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - web.example.com
+  resources:
+  - netflixes/status
+  verbs:
+  - get

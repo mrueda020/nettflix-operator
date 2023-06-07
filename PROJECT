@@ -10,4 +10,14 @@ plugins:
   scorecard.sdk.operatorframework.io/v2: {}
 projectName: nettflix-operator
 repo: github.com/mrueda020/netflix-operator
+resources:
+- api:
+    crdVersion: v1
+    namespaced: true
+  controller: true
+  domain: example.com
+  group: web
+  kind: Netflix
+  path: github.com/mrueda020/netflix-operator/api/v1alpha1
+  version: v1alpha1
 version: "3"

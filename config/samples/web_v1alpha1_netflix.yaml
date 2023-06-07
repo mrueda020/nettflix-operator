@@ -1,0 +1,12 @@
+apiVersion: web.example.com/v1alpha1
+kind: Netflix
+metadata:
+  labels:
+    app.kubernetes.io/name: netflix
+    app.kubernetes.io/instance: netflix-sample
+    app.kubernetes.io/part-of: nettflix-operator
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/created-by: nettflix-operator
+  name: netflix-sample
+spec:
+  # TODO(user): Add fields here

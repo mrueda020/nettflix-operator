@@ -30,7 +30,8 @@ type NetflixSpec struct {
 
 	//Replicas is the number of pods running
 	Replicas *int32 `json:"replicas,omitempty"`
-	//Port     *int32 `json:"port,omitempty"`
+	//Port which the service will be exposed
+	Port *int32 `json:"port,omitempty"`
 }
 
 // NetflixStatus defines the observed state of Netflix

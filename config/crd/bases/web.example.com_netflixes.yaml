@@ -35,6 +35,10 @@ spec:
           spec:
             description: NetflixSpec defines the desired state of Netflix
             properties:
+              port:
+                description: Port which the service will be exposed
+                format: int32
+                type: integer
               replicas:
                 description: Replicas is the number of pods running
                 format: int32

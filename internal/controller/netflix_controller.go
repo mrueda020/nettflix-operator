@@ -25,6 +25,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/utils/pointer"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/log"
@@ -83,7 +84,11 @@ func (r *NetflixReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 	// Set deployment fields
 	deployment.Namespace = req.Namespace
 	deployment.Name = req.Name
-	deployment.Spec.Replicas = netflixOperatorCR.Spec.Replicas
+	if netflixOperatorCR.Spec.Replicas != nil {
+		deployment.Spec.Replicas = netflixOperatorCR.Spec.Replicas
+	} else {
+		deployment.Spec.Replicas = pointer.Int32(3)
+	}
 
 	ctrl.SetControllerReference(netflixOperatorCR, deployment, r.Scheme)
 
@@ -117,6 +122,12 @@ func (r *NetflixReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 	// Set service fields
 	service.Namespace = req.Namespace
 	service.Name = req.Name
+	if netflixOperatorCR.Spec.Port != nil {
+		service.Spec.Ports[0].Port = *netflixOperatorCR.Spec.Port
+	} else {
+		service.Spec.Ports[0].Port = *pointer.Int32(3000)
+	}
+
 	ctrl.SetControllerReference(netflixOperatorCR, service, r.Scheme)
 
 	// Create or update the service
